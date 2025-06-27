@@ -1,0 +1,11 @@
+jasypt:
+  encryptor:
+    password: ${LOCAL_ENCRYPTOR_PASSWORD}
+
+datasource:
+  database:
+    url: jdbc:postgresql://localhost:5432/postgres
+    name: postgres
+    hostname: localhost
+    username: postgres
+    password: ENC(R/MmWuf/HGvy/YRJMwTcaYomOtXSADBO)
