@@ -1,10 +1,8 @@
 //import com.linkedin.AppProperties;
 
-import com.linkedin.data.dao.CustomerDao;
-import com.linkedin.data.dao.Dao;
-import com.linkedin.data.dao.ServiceDao;
-import com.linkedin.data.dao.VendorDao;
+import com.linkedin.data.dao.*;
 import com.linkedin.data.entity.Customer;
+import com.linkedin.data.entity.Product;
 import com.linkedin.data.entity.Service;
 import com.linkedin.data.entity.Vendor;
 
@@ -22,8 +20,8 @@ public class Application {
     
 //    testSqlServices();
 //    testSqlCustomers();
-    testSqlVendors();
-//    testSqlProducts();
+//    testSqlVendors();
+    testSqlProducts();
   }
   
   //-------------------------------------------------------------------------------------------------------------------
@@ -203,7 +201,57 @@ public class Application {
   //-------------------------------------------------------------------------------------------------------------------
   
   public static void testSqlProducts() {
-  
+    ProductDao productDao = new ProductDao();
+    Optional<Product> optionalProduct;
+    Product product;
+    
+    System.out.println("**** PRODUCTS ****");
+    //-------------------------------------------
+    System.out.println("\n*** GET_ALL ***");
+    List<Product> products = productDao.getAll();
+    products.forEach(System.out::println);
+    
+    //-------------------------------------------
+    System.out.println("\n*** GET_BY_ID ***");
+    UUID uuid = UUID.fromString("ed2ca4db-c78a-468f-a1f2-9c90b3cdae8d");
+    optionalProduct = productDao.getById(uuid);
+    if (optionalProduct.isPresent()) {
+      System.out.println(optionalProduct.get());
+    }
+    else System.out.println("No Product found for product_id=" + uuid);
+    
+    //-------------------------------------------
+    System.out.println("\n*** DELETE ***");
+    optionalProduct = products
+        .stream()
+        .filter(p -> p.getName().equals("Prevendog"))
+        .findFirst();
+    if (optionalProduct.isPresent()) {
+      UUID productID = optionalProduct.get().getProductId();
+      productDao.delete(productID);
+      optionalProduct = productDao.getById(productID);
+      if (!optionalProduct.isPresent()) {
+        System.out.println(productID + " deleted successfully");
+      }
+    }
+    else {
+      System.out.println("No Product found with product_id=9bb27067-5359-456a-88de-03a3a90a7253");
+    }
+
+    //-------------------------------------------
+    System.out.println("\n*** CREATE ***");
+    product = new Product();
+    product.setName("Prevendog");
+    product.setPrice(new  BigDecimal("23.40"));
+    product.setVendorId(UUID.fromString("9bb27067-5359-456a-88de-03a3a90a7253"));
+    product = productDao.create(product);
+    System.out.println(product);
+
+    //-------------------------------------------
+    System.out.println("\n*** UPDATE ***");
+    product.setPrice(new  BigDecimal("23.90"));
+    product = productDao.update(product);
+    System.out.println(product);
   }
   
   //-------------------------------------------------------------------------------------------------------------------

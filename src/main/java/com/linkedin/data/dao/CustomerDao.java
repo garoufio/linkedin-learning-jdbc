@@ -44,13 +44,13 @@ public class CustomerDao implements Dao<Customer, UUID> {
   
   @Override
   public Customer create(Customer entity) {
-    UUID uuid = UUID.randomUUID();
+    UUID customerId = UUID.randomUUID();
     Connection connection = DatabaseUtils.getConnection();
     
     try {
       connection.setAutoCommit(false);
       PreparedStatement statement = connection.prepareStatement(CREATE);
-      statement.setObject(1, uuid);
+      statement.setObject(1, customerId);
       statement.setString(2, entity.getFirstname());
       statement.setString(3, entity.getLastname());
       statement.setString(4, entity.getEmail());
@@ -67,7 +67,7 @@ public class CustomerDao implements Dao<Customer, UUID> {
       }
       DatabaseUtils.handleSqlException("CustomerDao.create", ex, LOGGER);
     }
-    Optional<Customer> customer = getById(uuid);
+    Optional<Customer> customer = getById(customerId);
     return customer.orElse(null);
   }
   
