@@ -17,6 +17,8 @@ public class CustomerDao implements Dao<Customer, UUID> {
       "FROM wisdom.customers";
   private static final String GET_BY_ID = "SELECT customer_id, first_name, last_name, email, phone, address " +
       "from wisdom.customers where customer_id = ?";
+  private static final String GET_ALL_PAGED = "SELECT customer_id, first_name, last_name, email, phone, address " +
+      "FROM wisdom.customers ORDER BY last_name, first_name LIMIT ? OFFSET ?";
   private static final String DELETE = "DELETE FROM wisdom.customers WHERE customer_id = ?";
   private static final String CREATE =  "INSERT INTO wisdom.customers " +
       "(customer_id, first_name, last_name, email, phone, address) VALUES (?, ?, ?, ?, ?, ?)";
@@ -32,10 +34,29 @@ public class CustomerDao implements Dao<Customer, UUID> {
     Connection connection = DatabaseUtils.getConnection();
     
     try (Statement statement = connection.createStatement();) {
-      ResultSet resultSet = statement.executeQuery(GET_ALL);
-      customers = processResultSet(resultSet);
+      ResultSet rs = statement.executeQuery(GET_ALL);
+      customers = processResultSet(rs);
+      rs.close();
     } catch (SQLException ex) {
       DatabaseUtils.handleSqlException("CustomerDao.getAll", ex, LOGGER);
+    }
+    return customers == null ? new ArrayList<>() : customers;
+  }
+  
+  //-------------------------------------------------------------------------------------------------------------------
+  
+  public List<Customer> getPaged(int page, int limit) {
+    List<Customer> customers = null;
+    Connection connection = DatabaseUtils.getConnection();
+    
+    try (PreparedStatement preparedStatement = connection.prepareStatement(GET_ALL_PAGED)) {
+      preparedStatement.setInt(1, limit);
+      preparedStatement.setInt(2, page);
+      ResultSet rs = preparedStatement.executeQuery();
+      customers = this.processResultSet(rs);
+      rs.close();
+    } catch (SQLException ex) {
+      DatabaseUtils.handleSqlException("CustomerDao.getPaged", ex, LOGGER);
     }
     return customers == null ? new ArrayList<>() : customers;
   }
@@ -133,17 +154,18 @@ public class CustomerDao implements Dao<Customer, UUID> {
     
     try (PreparedStatement statement = connection.prepareStatement(GET_BY_ID)) {
       statement.setObject(1, uuid);
-      ResultSet resultSet = statement.executeQuery();
-      if (resultSet.next()) {
+      ResultSet rs = statement.executeQuery();
+      if (rs.next()) {
         Customer customer = new Customer();
         customer.setCustomerId(uuid);
-        customer.setFirstname(resultSet.getString("first_name"));
-        customer.setLastname(resultSet.getString("last_name"));
-        customer.setEmail(resultSet.getString("email"));
-        customer.setPhone(resultSet.getString("phone"));
-        customer.setAddress(resultSet.getString("address"));
+        customer.setFirstname(rs.getString("first_name"));
+        customer.setLastname(rs.getString("last_name"));
+        customer.setEmail(rs.getString("email"));
+        customer.setPhone(rs.getString("phone"));
+        customer.setAddress(rs.getString("address"));
         return Optional.of(customer);
       }
+      rs.close();
     } catch (SQLException ex) {
       DatabaseUtils.handleSqlException("CustomerDao.getById", ex, LOGGER);
     }

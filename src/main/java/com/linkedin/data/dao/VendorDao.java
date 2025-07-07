@@ -32,8 +32,9 @@ public class VendorDao implements Dao<Vendor, UUID> {
     Connection connection = DatabaseUtils.getConnection();
     
     try (Statement statement = connection.createStatement();) {
-      ResultSet resultSet = statement.executeQuery(GET_ALL);
-      vendors = processResultSet(resultSet);
+      ResultSet rs = statement.executeQuery(GET_ALL);
+      vendors = processResultSet(rs);
+      rs.close();
     } catch (SQLException ex) {
       DatabaseUtils.handleSqlException("VendorDao.getAll", ex, LOGGER);
     }
@@ -143,6 +144,7 @@ public class VendorDao implements Dao<Vendor, UUID> {
         vendor.setAddress(rs.getString("address"));
         return Optional.of(vendor);
       }
+      rs.close();
     } catch (SQLException ex) {
       DatabaseUtils.handleSqlException("VendorDao.getById", ex, LOGGER);
     }

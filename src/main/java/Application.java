@@ -1,16 +1,10 @@
 //import com.linkedin.AppProperties;
 
 import com.linkedin.data.dao.*;
-import com.linkedin.data.entity.Customer;
-import com.linkedin.data.entity.Product;
-import com.linkedin.data.entity.Service;
-import com.linkedin.data.entity.Vendor;
+import com.linkedin.data.entity.*;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 public class Application {
   
@@ -18,10 +12,11 @@ public class Application {
     //AppProperties appProperties = new AppProperties();
     //appProperties.loadProperties(null);
     
-//    testSqlServices();
-//    testSqlCustomers();
-//    testSqlVendors();
+    testSqlServices();
+    testSqlCustomers();
+    testSqlVendors();
     testSqlProducts();
+    testStoredProcedure();
   }
   
   //-------------------------------------------------------------------------------------------------------------------
@@ -36,6 +31,11 @@ public class Application {
     System.out.println("\n*** GET_ALL ***");
     List<Service> services = serviceDao.getAll();
     services.forEach(System.out::println);
+    
+    //-------------------------------------------
+    System.out.println("\n*** GET_ALL_LIMIT_2 ***");
+    List<Service> limitedServices = serviceDao.getAllLimit(2);
+    limitedServices.forEach(System.out::println);
     
     //-------------------------------------------
     System.out.println("\n*** GET_BY_ID ***");
@@ -89,6 +89,13 @@ public class Application {
     System.out.println("\n*** GET_ALL ***");
     List<Customer> customers = customerDao.getAll();
     customers.forEach(System.out::println);
+    
+    //-------------------------------------------
+    System.out.println("\n*** GET_PAGED ***");
+    for (int i = 1; i < 11; i++) {
+      System.out.println("Page number: " + i);
+      customerDao.getPaged(i, 10).forEach(System.out::println);
+    }
     
     //-------------------------------------------
     System.out.println("\n*** GET_BY_ID ***");
@@ -252,6 +259,26 @@ public class Application {
     product.setPrice(new  BigDecimal("23.90"));
     product = productDao.update(product);
     System.out.println(product);
+  }
+  
+  //-------------------------------------------------------------------------------------------------------------------
+  
+  public static void testStoredProcedure() {
+    SimpleProductDao simpleProductDao = new SimpleProductDao();
+    
+    System.out.println("\n**** STORED_PROCEDURE ****");
+    System.out.println("\n*** SIMPLE PRODUCT ***");
+    UUID productId = simpleProductDao.createProduct(
+        "NextGuard_" + System.currentTimeMillis(), new BigDecimal(34.65), "Jaloo"
+    );
+    Optional<Product> product;
+    ProductDao productDao = new ProductDao();
+    
+    product = productDao.getById(productId);
+    if (product.isPresent()) {
+      System.out.println(product.get());
+    }
+    else System.out.println("No Product found for product_id=" + productId);
   }
   
   //-------------------------------------------------------------------------------------------------------------------

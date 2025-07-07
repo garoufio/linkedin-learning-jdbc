@@ -14,6 +14,7 @@ public class ServiceDao implements Dao<Service, UUID> {
   
   private static final Logger LOGGER = Logger.getLogger(ServiceDao.class.getName());
   private static final String GET_ALL = "SELECT service_id, name, price FROM wisdom.services";
+  private static final String GET_ALL_LIMIT  = "SELECT service_id, name, price FROM wisdom.services ORDER BY name limit ?";
   private static final String GET_BY_ID = "SELECT service_id, name, price FROM wisdom.services WHERE service_id = ?";
   private static final String CREATE = "INSERT INTO wisdom.services (service_id, name, price) VALUES (?, ?, ?)";
   private static final String UPDATE = "UPDATE wisdom.services SET name = ?, price = ? WHERE service_id = ?";
@@ -29,10 +30,28 @@ public class ServiceDao implements Dao<Service, UUID> {
     try (Statement statement = connection.createStatement()) {
       ResultSet rs = statement.executeQuery(GET_ALL);
       services = this.processResultSet(rs);
+      rs.close();
     } catch (SQLException ex) {
       DatabaseUtils.handleSqlException("ServiceDao.getAll", ex, LOGGER);
     }
     return services == null ? new ArrayList<>() : services;
+  }
+  
+  //-------------------------------------------------------------------------------------------------------------------
+  
+  public List<Service> getAllLimit(int limit ) {
+    List<Service> services = null;
+    Connection connection = DatabaseUtils.getConnection();
+    
+    try (PreparedStatement preparedStatement = connection.prepareStatement(GET_ALL_LIMIT)) {
+      preparedStatement.setInt(1, limit);
+      ResultSet rs = preparedStatement.executeQuery();
+      services = this.processResultSet(rs);
+      rs.close();
+    } catch (SQLException ex) {
+      DatabaseUtils.handleSqlException("ServiceDao.getAllLimit", ex, LOGGER);
+    }
+    return  services == null ? new ArrayList<>() : services;
   }
   
   //-------------------------------------------------------------------------------------------------------------------
@@ -129,6 +148,7 @@ public class ServiceDao implements Dao<Service, UUID> {
         service.setPrice(rs.getBigDecimal("price"));
         return Optional.of(service);
       }
+      rs.close();
     } catch (SQLException ex) {
       DatabaseUtils.handleSqlException("ServiceDao.getById", ex, LOGGER);
     }
